@@ -4,12 +4,6 @@ import fitz  # pymupdf
 RAW_DIR = pathlib.Path(__file__).parent.parent / "raw"
 
 def split_pdf(filename, start_page, end_page, output_name=None):
-    """
-    filename: raw/目录下的PDF文件名
-    start_page: 起始页（从1开始）
-    end_page: 结束页（包含）
-    output_name: 输出文件名，不填则自动命名
-    """
     input_path = RAW_DIR / filename
     if not input_path.exists():
         print(f"文件不存在: {input_path}")
@@ -38,7 +32,7 @@ def split_pdf(filename, start_page, end_page, output_name=None):
 
     if not output_name.endswith(".pdf"):
         output_name += ".pdf"
-        output_path = RAW_DIR / output_name
+    output_path = RAW_DIR / output_name
     new_doc.save(output_path)
     print(f"已保存：{output_name}（{end_page - start_page + 1} 页）")
 

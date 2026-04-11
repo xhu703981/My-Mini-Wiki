@@ -2,24 +2,16 @@ import pathlib
 from google import genai
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
 import os
 
 # ===== 配置 =====
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
-WIKI_DIR = pathlib.Path(__file__).parent.parent / "wiki"
-OUTPUT_DIR = pathlib.Path(__file__).parent.parent / "output"
-API_KEY = os.getenv("GEMINI_API_KEY")
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION = os.getenv("AWS_REGION")
 OPENSEARCH_ENDPOINT = os.getenv("OPENSEARCH_ENDPOINT")
 OPENSEARCH_USER = os.getenv("OPENSEARCH_USER")
 OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD")
-SERVICE="es"
-WIKI_DIR = pathlib.Path(__file__).parent.parent / "wiki"
-INDEX_NAME="wiki-rag"
+OUTPUT_DIR = pathlib.Path(__file__).parent.parent / "output"
+INDEX_NAME = "wiki-rag"
 host = OPENSEARCH_ENDPOINT.replace("https://", "")
 
 gemini_client = genai.Client(api_key=API_KEY)
@@ -61,8 +53,7 @@ def get_embedding(text):
             return embedding
         else:
             print(f"Invalid embedding length: {len(embedding) if embedding else 0}")
-            return None
-        
+            return None    
     except Exception as e:
         print(f"Error getting embedding: {e}")
         return None
@@ -91,15 +82,11 @@ def query(question):
 """
     print(f"\n问题：{question}")
     print("正在查询...\n")
-    
     response = gemini_client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt
     )
-    
     answer = response.text
-    
-    # 保存到output目录
     OUTPUT_DIR.mkdir(exist_ok=True)
     safe_name = "".join(c for c in question[:30] if c.isalnum() or c in " _-")
     out_file = OUTPUT_DIR / f"{safe_name.strip()}.md"

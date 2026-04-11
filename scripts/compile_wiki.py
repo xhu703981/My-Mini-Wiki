@@ -30,36 +30,29 @@ def get_new_files(processed):
     text_extensions = ["*.md", "*.txt", "*.py", "*.js", "*.ts", "*.cpp",
                        "*.c", "*.java", "*.r", "*.m", "*.ipynb"]
     image_extensions = ["*.png", "*.jpg", "*.jpeg", "*.webp"]
-
     all_files = []
     for ext in text_extensions + image_extensions + ["*.pdf"]:
         all_files += list(RAW_DIR.glob(f"**/{ext}"))
-
     new_files = []
     for f in all_files:
         mtime = str(f.stat().st_mtime)
         if f.name not in processed or processed[f.name] != mtime:
             new_files.append(f)
-
     return new_files
 
 def read_files(files):
     text_extensions = {".md", ".txt", ".py", ".js", ".ts", ".cpp",
                        ".c", ".java", ".r", ".m", ".ipynb"}
     image_extensions = {".png", ".jpg", ".jpeg", ".webp"}
-
     combined_text = ""
     images = []
-
     for f in files:
         suffix = f.suffix.lower()
-
         if suffix in text_extensions:
             try:
                 combined_text += f"\n\n--- FILE: {f.name} ---\n" + f.read_text(encoding="utf-8")
             except Exception as e:
                 print(f"  Skipped: {f.name} — {e}")
-
         elif suffix == ".pdf":
             print(f"Reading PDF: {f.name}")
             doc = fitz.open(f)
@@ -67,14 +60,12 @@ def read_files(files):
             for page in doc:
                 text += page.get_text()
             combined_text += f"\n\n--- FILE: {f.name} ---\n" + text
-
         elif suffix in image_extensions:
             print(f"Reading image: {f.name}")
             with open(f, "rb") as img_file:
                 b64 = base64.b64encode(img_file.read()).decode()
                 mime = "image/jpeg" if suffix in [".jpg", ".jpeg"] else f"image/{suffix[1:]}"
                 images.append({"name": f.name, "data": b64, "mime": mime})
-
     return combined_text, images
 
 def read_existing_wiki():
@@ -97,10 +88,8 @@ def strip_codeblock(text):
 
 def compile_wiki(text_content, images, existing_wiki):
     parts = []
-
     mode = "Incremental update" if existing_wiki else "Full generation"
     print(f"Mode: {mode}")
-
     existing_section = f"""
 Existing wiki content (preserve and expand, do not delete existing content):
 {existing_wiki}
@@ -131,14 +120,12 @@ New materials:
 Number of new images: {len(images)}
 """
     parts.append(prompt)
-
     for img in images:
         parts.append(f"\nImage file: {img['name']}")
         parts.append(types.Part.from_bytes(
             data=base64.b64decode(img["data"]),
             mime_type=img["mime"]
         ))
-
     print("Calling Gemini to compile wiki...")
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -172,19 +159,15 @@ def rebuild_index():
     files = [f for f in WIKI_DIR.glob("**/*.md") if f.name != "_index.md"]
     if not files:
         return
-
     prompt = "Based on the following wiki articles, generate a _index.md master index.\n\nRequirements:\n1. Every article name MUST use Obsidian link format: [[article name]] — one sentence summary\n2. Group by topic with ## subheadings\n3. Keep summaries concise, under 15 words\n4. Write everything in English\n5. Do NOT write plain text article names, ALWAYS use [[]] format\n6. Do NOT wrap output in markdown code blocks\n\nArticle summaries:\n"
-
     for f in sorted(files):
         content = f.read_text(encoding="utf-8")[:200]
         prompt += f"\n\n{f.name}:\n{content}"
-
     print("Rebuilding _index.md...")
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt
     )
-
     index_path = WIKI_DIR / "_index.md"
     index_content = strip_codeblock(response.text)
     index_path.write_text(index_content, encoding="utf-8")
@@ -193,7 +176,6 @@ def rebuild_index():
 if __name__ == "__main__":
     processed = load_processed()
     new_files = get_new_files(processed)
-
     if not new_files:
         print("No new files. Wiki is up to date.")
     else:
@@ -201,13 +183,11 @@ if __name__ == "__main__":
         for f in new_files:
             print(f"  {f.name}")
         print()
-
         text_content, images = read_files(new_files)
         existing_wiki = read_existing_wiki()
         wiki_text = compile_wiki(text_content, images, existing_wiki)
         save_wiki(wiki_text)
         rebuild_index()
-
         for f in new_files:
             processed[f.name] = str(f.stat().st_mtime)
         save_processed(processed)

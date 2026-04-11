@@ -96,7 +96,6 @@ def chunck_text(text,chunking_size=6000,overlap=300):  # use when text exceeds t
         start=end-overlap
     return chuncks
 
-
 def index_wiki(client):
     files=[f for f in WIKI_DIR.glob("*.md")  if not f.name.startswith("_")]
     print(f" found {len(files)} articles")

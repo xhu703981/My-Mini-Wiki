@@ -16,7 +16,6 @@ def find_best_match(link_name, filename_map):
     # 1. 完全匹配
     if link_name.lower() in filename_map:
         return filename_map[link_name.lower()]
-
     # 2. 包含匹配
     candidates = []
     for key, original in filename_map.items():
@@ -24,7 +23,6 @@ def find_best_match(link_name, filename_map):
             candidates.append((original, key))
     if len(candidates) == 1:
         return candidates[0][0]
-
     # 3. 词汇重叠匹配
     link_words = set(link_name.lower().split())
     best_score = 0
@@ -37,25 +35,19 @@ def find_best_match(link_name, filename_map):
             best_match = original
     if best_score >= 1:
         return best_match
-
     return None
 
 def fix_links_in_file(filepath, filename_map, broken_set, dry_run=True):
     content = filepath.read_text(encoding="utf-8")
-
     # 匹配普通链接 [[name]] 和别名链接 [[name|alias]]
     pattern = re.compile(r'\[\[([^\]|]+)(?:\|([^\]]+))?\]\]')
     replacements = {}
-
     for match in pattern.finditer(content):
         link_name = match.group(1).strip()
         alias = match.group(2)
         original_full = match.group(0)
-
-        # 已经正确的跳过
         if link_name in filename_map.values():
             continue
-
         best = find_best_match(link_name, filename_map)
         if best and best != link_name:
             # 保留alias如果有的话
@@ -64,20 +56,17 @@ def fix_links_in_file(filepath, filename_map, broken_set, dry_run=True):
             else:
                 new_link = f"[[{best}]]"
             replacements[original_full] = new_link
-
     if not replacements:
         return 0
 
     print(f"\n{filepath.name}:")
     for old, new in replacements.items():
         print(f"  {old} → {new}")
-
     if not dry_run:
         new_content = content
         for old, new in replacements.items():
             new_content = new_content.replace(old, new)
         filepath.write_text(new_content, encoding="utf-8")
-
     return len(replacements)
 
 def get_broken_links(filename_map):
