@@ -104,13 +104,10 @@ def search_hybrid(query_text,k=5):
         
     
 def query(question):
-    question_embedded=get_embedding(question)
-    related_content=search_by_dense(question_embedded, k=5)
-    context=""
-    for chunk in related_content:
-        title=chunk["title"]
-        content_text=chunk["content"]
-        context += f"\n\n--- ARTICLE: {title} ---\n{content_text}"
+    results = search_hybrid(question)
+    context = ""
+    for chunk in results:
+        context += f"\n\n--- ARTICLE: {chunk['title']} ---\n{chunk['content']}"
     prompt = f"""
 你是一个知识库问答助手。基于以下知识库内容回答问题。
 
