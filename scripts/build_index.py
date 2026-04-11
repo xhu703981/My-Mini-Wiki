@@ -96,10 +96,10 @@ def chunck_text(text,chunking_size=6000,overlap=300):  # use when text exceeds t
         start=end-overlap
     return chuncks
 
-def index_wiki(client):
-    files=[f for f in WIKI_DIR.glob("*.md")  if not f.name.startswith("_")]
+def index_wiki(client,files=None):
+    if files is None:
+          files = [f for f in WIKI_DIR.glob("*.md") if not f.name.startswith("_")]
     print(f" found {len(files)} articles")
-
     for f in files:
         content=f.read_text(encoding="utf-8")
         title=f.stem #filename
@@ -123,9 +123,8 @@ def index_wiki(client):
             print(f"indexed{i+1}articles already")
 
 if __name__ == "__main__":
-    create_index(client,True)
+    create_index(client,False)
     index_wiki(client)
-
 
 
 

@@ -194,5 +194,5 @@ if __name__ == "__main__":
         save_processed(processed)
         print("processed.json updated.")
     
-    build_index.create_index(build_index.client, force=True)
-    build_index.index_wiki(build_index.client)
+    build_index.create_index(build_index.client, force=False)
+    build_index.index_wiki(build_index.client,files=new_files)
