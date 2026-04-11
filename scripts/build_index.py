@@ -1,24 +1,18 @@
-import os 
+import os
 from dotenv import load_dotenv
 from google import genai
 from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_aws4auth import AWS4Auth
 import pathlib
 
 load_dotenv()
 
 #配置
 API_KEY = os.getenv("GEMINI_API_KEY")
-AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION = os.getenv("AWS_REGION")
 OPENSEARCH_ENDPOINT = os.getenv("OPENSEARCH_ENDPOINT")
 OPENSEARCH_USER = os.getenv("OPENSEARCH_USER")
 OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD")
-SERVICE="es"
 WIKI_DIR = pathlib.Path(__file__).parent.parent / "wiki"
-INDEX_NAME="wiki-rag"
-##awsauth = AWS4Auth(AWS_ACCESS_KEY, AWS_SECRET_ACCESS_KEY, AWS_REGION , SERVICE)
+INDEX_NAME = "wiki-rag"
 
 #client
 gemini_client=genai.Client(api_key=API_KEY)
