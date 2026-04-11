@@ -40,6 +40,21 @@ def search_by_dense(query_vector, k=5):
         result.append(hit["_source"])
     return result
 
+def search_by_BM25(query_text,k=5):
+    query_body=  {
+    "size": 5,
+    "query": {
+      "match": {
+        "content": query_text
+      }
+    }
+    }
+    response= client.search(index=INDEX_NAME, body=query_body)
+    result=[]
+    for hit in response["hits"]["hits"]:
+        result.append(hit["_source"])
+    return result
+
 def get_embedding(text):
     if not text or not text.strip():
         return None
@@ -58,6 +73,36 @@ def get_embedding(text):
         print(f"Error getting embedding: {e}")
         return None
 
+def search_hybrid(query_text,k=5):
+    question_embedded=get_embedding(query_text)
+    related_cotent_by_dense= search_by_dense(question_embedded, k=5)
+    related_content_by_BM25=search_by_BM25(query_text, k=5)
+    scores={}
+    rank=1
+    for chunk in related_content_by_BM25:
+        key_BM=(chunk["title"],chunk["chunk_id"])
+        content_text_BM=chunk["content"]
+        scores[key_BM]=1/(rank+60)
+        rank+=1
+
+    rank=1
+    for chunk in related_cotent_by_dense:
+        key_dense= (chunk["title"],chunk["chunk_id"])
+        context_text_dense=chunk["content"]
+        if key_dense in scores:
+            scores[key_dense]+=1/(rank+60)
+        else:
+            scores[key_dense]=1/(rank+60)
+        rank+=1
+    chunks={}
+    for chunk in related_content_by_BM25+related_cotent_by_dense:
+        key= (chunk["title"],chunk["chunk_id"])
+        chunks[key]=chunk
+    sorted_keys= sorted(scores,key=lambda x:-scores[x])
+    return [chunks[key] for key in sorted_keys[:k]]
+    
+        
+    
 def query(question):
     question_embedded=get_embedding(question)
     related_content=search_by_dense(question_embedded, k=5)
@@ -95,7 +140,6 @@ def query(question):
     print(f"\n已保存到: {out_file.name}")
 
 if __name__ == "__main__":
-    print("PINN 知识库问答系统")
     print("输入 quit 退出\n")
     while True:
         q = input("你的问题：").strip()
