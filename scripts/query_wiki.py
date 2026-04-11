@@ -101,9 +101,7 @@ def search_hybrid(query_text,k=5):
     sorted_keys= sorted(scores,key=lambda x:-scores[x])
     return [chunks[key] for key in sorted_keys[:k]]
     
-        
-    
-def query(question):
+def get_answer(question):  #this is for api specifically 
     results = search_hybrid(question)
     context = ""
     for chunk in results:
@@ -122,13 +120,15 @@ def query(question):
 
 问题：{question}
 """
-    print(f"\n问题：{question}")
-    print("正在查询...\n")
     response = gemini_client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt
     )
     answer = response.text
+    return answer
+    
+def query(question):
+    answer = get_answer(question)
     OUTPUT_DIR.mkdir(exist_ok=True)
     safe_name = "".join(c for c in question[:30] if c.isalnum() or c in " _-")
     out_file = OUTPUT_DIR / f"{safe_name.strip()}.md"

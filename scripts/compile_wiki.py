@@ -6,6 +6,7 @@ from google.genai import types
 import fitz
 from dotenv import load_dotenv
 import os 
+import build_index
 
 # 配置
 load_dotenv()
@@ -192,3 +193,6 @@ if __name__ == "__main__":
             processed[f.name] = str(f.stat().st_mtime)
         save_processed(processed)
         print("processed.json updated.")
+    
+    build_index.create_index(build_index.client, force=True)
+    build_index.index_wiki(build_index.client)
