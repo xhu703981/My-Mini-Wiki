@@ -77,7 +77,7 @@ def create_index(client,force):
             client.indices.delete(index=index_name)
             print(f"Deleted old index: {index_name}")
         else:
-            print("Index already exists, skipping.")
+            print("skipping.")
             return
     client.indices.create(index=index_name, body=index_body)
 

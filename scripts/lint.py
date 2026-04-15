@@ -3,6 +3,7 @@ import re
 from google import genai
 from dotenv import load_dotenv
 import os 
+import build_index
 
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
@@ -217,5 +218,6 @@ if __name__ == "__main__":
             print("Skipped.")
     else:
         print("\nNo new articles to generate.")
-
+    build_index.create_index(build_index.client, force=True)
+    build_index.index_wiki(build_index.client)
     print("\nHealth check complete.")

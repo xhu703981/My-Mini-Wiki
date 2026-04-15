@@ -69,16 +69,6 @@ def read_files(files):
                 images.append({"name": f.name, "data": b64, "mime": mime})
     return combined_text, images
 
-def read_existing_wiki():
-    # 排除_index.md，避免污染其他文章
-    files = [f for f in WIKI_DIR.glob("**/*.md") if f.name != "_index.md"]
-    if not files:
-        return ""
-    combined = ""
-    for f in files:
-        combined += f"\n\n--- WIKI FILE: {f.name} ---\n" + f.read_text(encoding="utf-8")
-    return combined
-
 def strip_codeblock(text):
     text = text.strip()
     if text.startswith("```"):
@@ -87,17 +77,10 @@ def strip_codeblock(text):
         text = text.rsplit("\n", 1)[0]
     return text.strip()
 
-def compile_wiki(text_content, images, existing_wiki):
+def compile_wiki(text_content, images):
     parts = []
-    mode = "Incremental update" if existing_wiki else "Full generation"
-    print(f"Mode: {mode}")
-    existing_section = f"""
-Existing wiki content (preserve and expand, do not delete existing content):
-{existing_wiki}
-""" if existing_wiki else "(This is the first time generating the wiki.)"
-
     prompt = f"""
-You are a knowledge base compiler. Based on the new materials provided, {'update and expand the existing wiki' if existing_wiki else 'generate a wiki knowledge base'}.
+You are a knowledge base compiler. Based on the new materials provided, update and expand the existing wiki.
 
 Requirements:
 1. Extract all core concepts from new materials, write one article per concept
@@ -106,14 +89,9 @@ Requirements:
 4. For images, extract the knowledge and concepts shown
 5. For techinical document, extract the key concepts,implementation ideas to make sure what's output is a contracted document
 6. Use [[concept name]] syntax for bidirectional links between articles (Obsidian format)
-7. If new concepts relate to existing wiki articles, add "Related Concepts" links at the end of those articles
 8. Output format: separate each file with === FILE: filename.md === on its own line
-9. Only output new or modified files, do not repeat unchanged files
 10. Write all articles in English, including file names and titles
 11. Do NOT wrap output in markdown code blocks
-12. When creating [[links]], only link to concepts that you are ALSO creating an article for in this output. Do not create links to concepts that don't have a corresponding article.
-
-{existing_section}
 
 New materials:
 {text_content}
@@ -139,40 +117,24 @@ def save_wiki(text):
     text = strip_codeblock(text)
     sections = text.split("=== FILE:")
     saved = 0
+    files_to_be_index=[]
     for section in sections:
         section = section.strip()
         if not section:
             continue
         lines = section.split("\n", 1)
         filename = lines[0].strip().rstrip("===").strip()
-# 替换Windows文件名非法字符
         filename = filename.replace("\\", "-").replace("/", "-").replace(":", "-").replace("*", "-").replace("?", "-").replace('"', "-").replace("<", "-").replace(">", "-").replace("|", "-")
         content = lines[1].strip() if len(lines) > 1 else ""
         content = strip_codeblock(content)
         if filename.endswith(".md"):
             filepath = WIKI_DIR / filename
             filepath.write_text(content, encoding="utf-8")
+            files_to_be_index.append(filepath)
             print(f"Saved: {filename}")
             saved += 1
     print(f"\nDone! {saved} files updated.")
-
-def rebuild_index():
-    files = [f for f in WIKI_DIR.glob("**/*.md") if f.name != "_index.md"]
-    if not files:
-        return
-    prompt = "Based on the following wiki articles, generate a _index.md master index.\n\nRequirements:\n1. Every article name MUST use Obsidian link format: [[article name]] — one sentence summary\n2. Group by topic with ## subheadings\n3. Keep summaries concise, under 15 words\n4. Write everything in English\n5. Do NOT write plain text article names, ALWAYS use [[]] format\n6. Do NOT wrap output in markdown code blocks\n\nArticle summaries:\n"
-    for f in sorted(files):
-        content = f.read_text(encoding="utf-8")[:200]
-        prompt += f"\n\n{f.name}:\n{content}"
-    print("Rebuilding _index.md...")
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-    index_path = WIKI_DIR / "_index.md"
-    index_content = strip_codeblock(response.text)
-    index_path.write_text(index_content, encoding="utf-8")
-    print("_index.md updated.")
+    return files_to_be_index
 
 if __name__ == "__main__":
     processed = load_processed()
@@ -185,14 +147,12 @@ if __name__ == "__main__":
             print(f"  {f.name}")
         print()
         text_content, images = read_files(new_files)
-        existing_wiki = read_existing_wiki()
-        wiki_text = compile_wiki(text_content, images, existing_wiki)
-        save_wiki(wiki_text)
-        rebuild_index()
+        wiki_text = compile_wiki(text_content, images)
+        file_tobe_index = save_wiki(wiki_text)
         for f in new_files:
             processed[f.name] = str(f.stat().st_mtime)
         save_processed(processed)
         print("processed.json updated.")
+        build_index.create_index(build_index.client, force=False)
+        build_index.index_wiki(build_index.client,files=file_tobe_index)
     
-    build_index.create_index(build_index.client, force=False)
-    build_index.index_wiki(build_index.client,files=new_files)
