@@ -49,14 +49,14 @@ def read_files(files):
         new_image=None
         if file.suffix in text_extensions:
             new_text=file.read_text(encoding="utf-8")
-            token_count = len(current_text + new_text) // 4
+            token_count = len(new_text) // 4
 
         if file.suffix in pdf_extensions:
             new_text=""
             doc=fitz.open(file)
             for page in doc:
                 new_text+=page.get_text()
-            token_count = len(current_text + new_text) // 4
+            token_count = len(new_text) // 4
 
         if file.suffix in image_extensions:
             with open(file,"rb") as image_file:

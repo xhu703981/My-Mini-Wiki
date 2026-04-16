@@ -8,216 +8,117 @@ import build_index
 load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 WIKI_DIR = pathlib.Path(__file__).parent.parent / "wiki"
-
 client = genai.Client(api_key=API_KEY)
+token_limit=700000
 
-def get_all_filenames():
-    mapping = {}
-    for f in WIKI_DIR.glob("**/*.md"):
-        if f.name != "_index.md":
-            mapping[f.stem.lower()] = f.stem
-    return mapping
+def read_articles():
+    files = [f for f in WIKI_DIR.glob("*.md") if not f.name.startswith("_")]
+    combined_text=""
+    current_token=0
+    batches=[]
+    for file in files:
+        token_count=0
+        current_text=f"=== ARTICLE: {file.name} ===\n" +file.read_text(encoding="utf-8")
+        token_count=len(current_text)//4
+        if token_count+current_token<token_limit:
+            combined_text+=current_text
+            current_token+=token_count
+        else:
+            batches.append(combined_text)
+            combined_text=current_text
+            current_token=len(current_text)//4
+    batches.append(combined_text)
+    return batches
 
-def get_broken_links(filename_map):
-    broken = set()
-    pattern = re.compile(r'\[\[([^\]|]+)(?:\|[^\]]*)?\]\]')
-    for f in WIKI_DIR.glob("**/*.md"):
-        for match in pattern.finditer(f.read_text(encoding="utf-8")):
-            link_name = match.group(1).strip()
-            if link_name not in filename_map.values():
-                broken.add(link_name)
-    return broken
-
-def read_wiki_summary():
-    files = [f for f in WIKI_DIR.glob("**/*.md") if f.name != "_index.md"]
-    combined = ""
-    for f in sorted(files):
-        content = f.read_text(encoding="utf-8")[:300]
-        combined += f"\n\n--- {f.stem} ---\n{content}"
-    return combined
-
-def run_lint():
-    filename_map = get_all_filenames()
-    broken_links = get_broken_links(filename_map)
-    wiki_summary = read_wiki_summary()
-    article_list = "\n".join(sorted(filename_map.values()))
-
+def get_command(text):
     prompt = f"""
-You are a knowledge base editor. Analyze the following wiki and perform a full health check.
+You are a knowledge base editor. Analyze the following wiki articles and improve the knowledge base.
 
-Existing articles:
-{article_list}
+Perform these operations where needed:
 
-Broken links (referenced but no article exists):
-{chr(10).join(f"- [[{b}]]" for b in sorted(broken_links)) if broken_links else "None"}
+MERGE: Combine articles that cover the same concept or have significant overlap.
+DELETE: Remove articles that are too specific, procedural, or not reusable knowledge.
+UPDATE: Rewrite articles that are incomplete, unclear, or need better connections.
+LINK: Fix or add [[concept]] links between related articles.
 
-Wiki content summaries:
-{wiki_summary}
+OUTPUT FORMAT — output ONLY operation blocks, no commentary:
 
-Please provide a health check report with these sections:
+For MERGE:
+=== MERGE: result-filename.md ===
+[full content of merged article]
 
-## 1. Broken Links to Generate
-For each broken link, decide:
-- GENERATE: this concept deserves its own article
-- SKIP: this is too minor, just remove the link
+For DELETE:
+=== DELETE: filename.md ===
 
-Format:
-GENERATE: concept name | one sentence description
-SKIP: concept name | reason
+For UPDATE:
+=== UPDATE: filename.md ===
+[full new content of article]
 
-## 2. Knowledge Gaps
-Concepts that are mentioned but underdeveloped, or important topics missing entirely.
-Format: GAP: concept name | what's missing
+For LINK:
+=== LINK: filename.md ===
+[full content with fixed/added [[links]]]
 
-## 3. Inconsistencies
-Contradictions or conflicts between articles.
-Format: INCONSISTENCY: article1 vs article2 | description
+STRICT FORMAT RULES:
+- Each operation is a separate block
+- Block header must be exactly: === OPERATION: filename.md === (uppercase operation name, no extra spaces)
+- Content immediately follows the header on the next line
+- Blocks are separated by a blank line
+- For DELETE: no content, just the header line
+- Only output blocks for articles that need changes, skip unchanged ones
+- File names in English, lowercase with hyphens
+- Use [[concept name]] syntax for all internal links
+- Do NOT wrap output in markdown code blocks
 
-## 4. New Article Suggestions
-Interesting connections or synthesis articles worth writing.
-Format: SUGGEST: article name | why it would be valuable
-
-## 5. Articles to Merge
-Articles that overlap  significantly or highly relevant details and should be combined.
-Format: MERGE: article1 + article2 | reason
-
-## 6. Articles to delete
-Delete Articles or concepts that are too detaliled to be remembered or too concrete to be thought as "concept" or "knowledge"
-For instance"Amazon OpenSearch Service Version Upgrades" is not essentially any knowledge.it's an detail in within the larger picture.
-especially those found in technical tocument. 
-Format: Delete article name | reason
-
-Write in English. Be specific and actionable.
+Wiki articles:
+{text}
 """
+    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    return response.text
 
-    print("Running wiki health check...")
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-    return response.text, broken_links, filename_map
+def execute_command(text):
+    pattern = re.compile(r'=== (MERGE|DELETE|UPDATE|LINK): (.+?\.md)(?:\s*\(FROM:\s*(.+?)\))? ===')
+    matches = list(pattern.finditer(text))
+    modified_files = []
+    for i, match in enumerate(matches):
+        operation = match.group(1)
+        filename = match.group(2)
+        content_start = match.end()
+        content_end = matches[i+1].start() if i+1 < len(matches) else len(text)
+        content = text[content_start:content_end].strip()
+        if operation == "DELETE":
+            (WIKI_DIR / filename).unlink(missing_ok=True)
+        else:
+            (WIKI_DIR / filename).write_text(content, encoding="utf-8")
+            modified_files.append(WIKI_DIR / filename)
+            if operation == "MERGE" and match.group(3):
+                for src in match.group(3).split(","):
+                    (WIKI_DIR / src.strip()).unlink(missing_ok=True)
+    return modified_files
 
-def parse_generates(report):
-    generates = []
-    for line in report.split("\n"):
-        line = line.strip()
-        if line.startswith("GENERATE:"):
-            parts = line[9:].split("|", 1)
-            if parts:
-                concept = parts[0].strip()
-                desc = parts[1].strip() if len(parts) > 1 else ""
-                generates.append((concept, desc))
-    return generates
-
-def generate_articles(concepts, filename_map):
-    if not concepts:
-        print("No articles to generate.")
-        return
-
-    index = WIKI_DIR / "_index.md"
-    index_content = index.read_text(encoding="utf-8") if index.exists() else ""
-    article_list = "\n".join(sorted(filename_map.values()))
-
-    prompt = f"""
-You are a knowledge base compiler. Generate wiki articles for the following concepts.
-
-Existing articles (use these for [[links]]):
-{article_list}
-
-Context from wiki index:
-{index_content[:1000]}
-
-For each concept write:
-1. Concept explanation (2-3 paragraphs)
-2. Key Takeaways (bullet points)
-3. Connections to Other Concepts ([[links]] to existing articles only)
-
-Concepts to generate:
-{chr(10).join(f"- {c[0]}: {c[1]}" for c in concepts)}
-
-Output format: === FILE: concept name.md === on its own line before each article.
-Write in English. Do NOT wrap in markdown code blocks.
-Only use [[links]] to articles that exist in the existing articles list above.
-"""
-
-    print(f"\nGenerating {len(concepts)} new articles...")
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-
-    sections = response.text.split("=== FILE:")
-    saved = 0
-    for section in sections:
-        section = section.strip()
-        if not section:
-            continue
-        lines = section.split("\n", 1)
-        filename = lines[0].strip().rstrip("===").strip()
-        filename = filename.replace("\\", "-").replace("/", "-").replace(":", "-").replace("*", "-").replace("?", "-").replace('"', "-").replace("<", "-").replace(">", "-").replace("|", "-")
-        content = lines[1].strip() if len(lines) > 1 else ""
-        if filename.endswith(".md"):
-            filepath = WIKI_DIR / filename
-            filepath.write_text(content, encoding="utf-8")
-            print(f"  Saved: {filename}")
-            saved += 1
-    print(f"  {saved} articles saved.")
-
-def rebuild_index():
-    files = [f for f in WIKI_DIR.glob("**/*.md") if f.name != "_index.md"]
-    if not files:
-        return
-
-    prompt = "Based on the following wiki articles, generate a _index.md master index.\n\nRequirements:\n1. Every article name MUST use [[article name]] Obsidian link format\n2. Group by topic with ## subheadings\n3. One sentence summary per article, under 15 words\n4. Write in English\n5. Do NOT wrap in markdown code blocks\n\nArticle summaries:\n"
-    for f in sorted(files):
-        content = f.read_text(encoding="utf-8")[:200]
-        prompt += f"\n\n{f.name}:\n{content}"
-
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-    text = response.text.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1]
-    if text.endswith("```"):
-        text = text.rsplit("\n", 1)[0]
-
-    (WIKI_DIR / "_index.md").write_text(text.strip(), encoding="utf-8")
-    print("  _index.md updated.")
+def build_overview(text):
+    prompt=f"""
+  You are a knowledge base organizer. Based on the following wiki articles, generate a master overview document.
+  REQUIREMENTS:
+  - Group articles by topic using ## subheadings
+  - Each article gets one line: [[article name]] — one sentence description (under 15 words)
+  - Only include articles that exist, do not invent new ones
+  - Write in English
+  - Do NOT wrap output in markdown code blocks
+  Wiki articles:
+  {text}
+    """
+    response =client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    (WIKI_DIR / "_overview.md").write_text(response.text, encoding="utf-8")
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print("WIKI HEALTH CHECK")
-    print("=" * 50)
-
-    report, broken_links, filename_map = run_lint()
-
-    # 保存报告
-    report_path = WIKI_DIR.parent / "output" / "lint_report.md"
-    report_path.parent.mkdir(exist_ok=True)
-    report_path.write_text(report, encoding="utf-8")
-    print(f"\nReport saved to: lint_report.md")
-    print("\n" + report)
-
-    # 处理需要生成的文章
-    generates = parse_generates(report)
-    if generates:
-        print(f"\n{'=' * 50}")
-        print(f"Found {len(generates)} concepts to generate:")
-        for concept, desc in generates:
-            print(f"  + {concept}: {desc}")
-
-        confirm = input("\nGenerate these articles? (yes/no): ").strip().lower()
-        if confirm == "yes":
-            generate_articles(generates, filename_map)
-            print("\nRebuilding _index.md...")
-            rebuild_index()
-            print("\nDone! Run fix_links.py if needed.")
-        else:
-            print("Skipped.")
-    else:
-        print("\nNo new articles to generate.")
-    build_index.create_index(build_index.client, force=True)
-    build_index.index_wiki(build_index.client)
-    print("\nHealth check complete.")
+    articles_batches=read_articles()
+    combined_text=""
+    modified_files=[]
+    for batch in articles_batches:
+        command=get_command(batch)
+        print(f"\n{command}")
+        modified_files+=execute_command(command)
+        combined_text+=batch
+    build_overview(combined_text)
+    build_index.create_index(build_index.client, force=False)
+    build_index.index_wiki(build_index.client, files=modified_files)

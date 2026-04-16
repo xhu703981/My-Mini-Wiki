@@ -5,16 +5,12 @@ from opensearchpy import OpenSearch, RequestsHttpConnection
 import pathlib
 
 load_dotenv()
-
-#配置
 API_KEY = os.getenv("GEMINI_API_KEY")
 OPENSEARCH_ENDPOINT = os.getenv("OPENSEARCH_ENDPOINT")
 OPENSEARCH_USER = os.getenv("OPENSEARCH_USER")
 OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD")
 WIKI_DIR = pathlib.Path(__file__).parent.parent / "wiki"
 INDEX_NAME = "wiki-rag"
-
-#client
 gemini_client=genai.Client(api_key=API_KEY)
 host=OPENSEARCH_ENDPOINT.replace("https://", "")
 client=OpenSearch(hosts=[{"host": host, "port": 443}],
@@ -24,22 +20,13 @@ client=OpenSearch(hosts=[{"host": host, "port": 443}],
         connection_class=RequestsHttpConnection,
         timeout=30)
 
-#Methods
 def get_embedding(text):
-    if not text or not text.strip():
-        return None
+    if not text or not text.strip(): return None
     try:
         response=gemini_client.models.embed_content(model="gemini-embedding-001", contents=text)
-        if not response.embeddings:
-            return None
         [result] = response.embeddings
         embedding = result.values
-        if embedding and len(embedding) == 3072:
-            return embedding
-        else:
-            print(f"Invalid embedding length: {len(embedding) if embedding else 0}")
-            return None
-        
+        return embedding     
     except Exception as e:
         print(f"Error getting embedding: {e}")
         return None
@@ -76,9 +63,7 @@ def create_index(client,force):
         if force:
             client.indices.delete(index=index_name)
             print(f"Deleted old index: {index_name}")
-        else:
-            print("skipping.")
-            return
+        else: return
     client.indices.create(index=index_name, body=index_body)
 
 def chunck_text(text,chunking_size=6000,overlap=300):  # use when text exceeds the context window of gemini, 6000 size=1500tokens(limit:2048)
@@ -91,12 +76,11 @@ def chunck_text(text,chunking_size=6000,overlap=300):  # use when text exceeds t
     return chuncks
 
 def index_wiki(client,files=None):
-    if files is None:
-          files = [f for f in WIKI_DIR.glob("*.md") if not f.name.startswith("_")]
+    if files is None: files = [f for f in WIKI_DIR.glob("*.md") if not f.name.startswith("_")]
     print(f" found {len(files)} articles")
     for f in files:
         content=f.read_text(encoding="utf-8")
-        title=f.stem #filename
+        title=f.stem
         if len(content)>=6000:
             chunks=chunck_text(content)
         else:
