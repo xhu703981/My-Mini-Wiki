@@ -114,7 +114,7 @@ def index_wiki(client,files=None):
                 "embedding": text_after_embedding
             }
             client.index(index=INDEX_NAME,id=f"{title}_chunk_{i}",body=doc)
-            print(f"indexed{i+1}articles already")
+        print(f"indexed{i+1}articles already")
 
 if __name__ == "__main__":
     create_index(client,False)
