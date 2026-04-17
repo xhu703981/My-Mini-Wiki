@@ -1,8 +1,9 @@
 import pathlib
 import re
+import time
 from google import genai
 from dotenv import load_dotenv
-import os 
+import os
 import build_index
 
 load_dotenv()
@@ -10,6 +11,16 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 WIKI_DIR = pathlib.Path(__file__).parent.parent / "wiki"
 client = genai.Client(api_key=API_KEY)
 token_limit=700000
+
+def generate_with_retry(prompt, model="gemini-2.5-pro", retries=5, delay=30):
+    for attempt in range(retries):
+        try:
+            return client.models.generate_content(model=model, contents=prompt)
+        except genai.errors.ServerError as e:
+            if attempt < retries - 1:
+                print(f"retrying in {delay}s... ({attempt+1}/{retries})")
+                time.sleep(delay)
+            else: raise
 
 def read_articles():
     files = [f for f in WIKI_DIR.glob("*.md") if not f.name.startswith("_")]
@@ -72,7 +83,7 @@ STRICT FORMAT RULES:
 Wiki articles:
 {text}
 """
-    response = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    response = generate_with_retry(prompt)
     return response.text
 
 def execute_command(text):
@@ -107,8 +118,59 @@ def build_overview(text):
   Wiki articles:
   {text}
     """
-    response =client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+    response =generate_with_retry(prompt)
     (WIKI_DIR / "_overview.md").write_text(response.text, encoding="utf-8")
+
+def find_links():
+    files = [f for f in WIKI_DIR.glob("*.md")]
+    existing_titles = set()
+    file_contents = {}
+    for file in files:
+        text = file.read_text(encoding="utf-8")
+        file_contents[file.name] = text
+        match = re.search(r'^##\s+(.+)', text, re.MULTILINE)
+        if match: existing_titles.add(match.group(1).strip())
+        existing_titles.add(file.stem)
+    broken = {}
+    for filename, text in file_contents.items():
+        links = re.findall(r'\[\[(.+?)\]\]', text)
+        bad = [l for l in links if l not in existing_titles]
+        if bad: broken[filename] = bad
+    return broken, existing_titles
+
+def fix_links(broken, existing_titles):
+    titles_list = "\n".join(existing_titles)
+    broken_list = "\n".join(set(link for links in broken.values() for link in links))
+    prompt = f"""
+You are a wiki editor. Match each broken link to the correct existing article title.
+Existing titles:
+{titles_list}
+Broken links:
+{broken_list}
+OUTPUT FORMAT — output ONLY lines like:
+broken link -> correct title
+Rules:
+- If no good match exists, write: broken link -> REMOVE
+- Do not add commentary
+"""
+    response = generate_with_retry(prompt)
+    mapping = {}
+    for line in response.text.splitlines():
+        if "->" not in line: continue
+        old, new = line.split("->", 1)
+        mapping[old.strip()] = new.strip()
+    print(f"Mapping parsed: {len(mapping)} entries")
+    for filename, bad_links in broken.items():
+        path = WIKI_DIR / filename
+        text = path.read_text(encoding="utf-8")
+        for link in bad_links:
+            if link not in mapping: continue
+            target = mapping[link]
+            if target == "REMOVE":
+                text = text.replace(f"[[{link}]]", link)
+            else:
+                text = text.replace(f"[[{link}]]", f"[[{target}]]")
+        path.write_text(text, encoding="utf-8")
 
 if __name__ == "__main__":
     articles_batches=read_articles()
@@ -120,5 +182,7 @@ if __name__ == "__main__":
         modified_files+=execute_command(command)
         combined_text+=batch
     build_overview(combined_text)
+    broken, existing_titles = find_links()
+    fix_links(broken, existing_titles)
     build_index.create_index(build_index.client, force=False)
     build_index.index_wiki(build_index.client, files=modified_files)
