@@ -12,7 +12,7 @@ def split_pdf(filename, start_page, end_page, output_name=None):
     total_pages = len(doc)
     print(f"File: {filename}, {total_pages} pages total")
     start = start_page - 1
-    end = end_page  # fitz select is exclusive end
+    end = end_page  
     if start < 0 or end > total_pages:
         print(f"Page range out of bounds, PDF has {total_pages} pages")
         return

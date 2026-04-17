@@ -1,0 +1,227 @@
+[
+  {
+    "question": "What specific formula does Mill's Inequality provide for a standard Normal random variable?",
+    "ground_truth": "For a standard Normal random variable Z (where Z \u223c N(0, 1)) and any t > 0, Mill's Inequality states that the tail probability is bounded as follows: P(|Z| > t) \u2264 \u221a(2/\u03c0) * e^(-t\u00b2/2) / t.",
+    "source_article": "mills-inequality"
+  },
+  {
+    "question": "How does Mill's Inequality describe the behavior of tail probabilities in a Normal distribution?",
+    "ground_truth": "Mill's Inequality shows that the probability of a standard Normal variable being far from its mean decreases very rapidly, specifically exponentially, as the distance 't' from the mean increases. It highlights the rapid decay of these tail probabilities.",
+    "source_article": "mills-inequality"
+  },
+  {
+    "question": "What is the advantage of using Mill's Inequality compared to a more general one like Chebyshev's Inequality?",
+    "ground_truth": "The advantage is that Mill's Inequality provides a tighter and sharper upper bound on the likelihood of observing extreme values specifically for a Normal distribution, making it particularly useful in theoretical contexts where precise bounds are needed.",
+    "source_article": "mills-inequality"
+  },
+  {
+    "question": "How does semantic search in OpenSearch differ from traditional lexical search?",
+    "ground_truth": "Semantic search in OpenSearch differs from traditional lexical search by aiming to understand the intent and contextual meaning of queries, rather than relying solely on literal keyword matching. It uses vector embeddings and machine learning models to grasp underlying concepts, allowing it to find relevant results that may not contain the exact terms from the query but are conceptually similar.",
+    "source_article": "semantic-search"
+  },
+  {
+    "question": "What is the role of Vector Embeddings in implementing semantic search?",
+    "ground_truth": "Vector Embeddings are fundamental to semantic search as they serve as numerical representations that capture the semantic meaning of text. The process involves transforming text data into these vector embeddings, which enables the system to perform powerful similarity searches and find documents that are conceptually related, bridging the gap between user intent and how data is indexed.",
+    "source_article": "semantic-search"
+  },
+  {
+    "question": "What methods or related technologies can be used to implement or refine semantic search?",
+    "ground_truth": "Semantic search can be implemented using methods like Neural Search and Vector Search. For further refinement of the results, it can be used in conjunction with Learning to Rank, which can enhance search results by incorporating behavioral signals.",
+    "source_article": "semantic-search"
+  },
+  {
+    "question": "What are the different authentication methods for an AWS Account Root User versus an IAM User?",
+    "ground_truth": "The AWS Account Root User authenticates using the email address and password that were used to create the account. In contrast, IAM Users authenticate with their username and password for console access, or with an access key ID and secret access key for programmatic access through the AWS CLI or SDKs.",
+    "source_article": "authentication-in-aws"
+  },
+  {
+    "question": "What is the role of authentication within the broader AWS Identity and Access Management (IAM) framework?",
+    "ground_truth": "Authentication is the first critical step in the AWS Identity and Access Management (IAM) framework. Its purpose is to verify the identity of a principal (a user, role, or service) by confirming that the entity is who it claims to be based on provided credentials. It is the prerequisite step that must occur before authorization, where the principal's permissions are evaluated.",
+    "source_article": "authentication-in-aws"
+  },
+  {
+    "question": "Based on the article's key takeaways, what is the recommended practice for securing programmatic access to AWS?",
+    "ground_truth": "For programmatic access, the article recommends prioritizing the use of temporary credentials. These can be obtained by assuming IAM Roles or through Identity Federation, rather than relying on long-term access keys that are associated with IAM Users.",
+    "source_article": "authentication-in-aws"
+  },
+  {
+    "question": "According to the article, what specific tasks are reserved exclusively for the AWS account root user?",
+    "ground_truth": "The AWS account root user should be reserved exclusively for a very limited set of tasks that only it can perform, such as changing account settings, modifying support plans, or recovering IAM access.",
+    "source_article": "aws-account-root-user-aws"
+  },
+  {
+    "question": "Why is it considered a security best practice to avoid using the AWS root user for daily operations?",
+    "ground_truth": "It is a best practice to avoid using the root user for daily tasks because it is the most privileged identity, possessing complete access to all AWS services and resources, including billing information and the ability to close the account. Using such a powerful identity for routine tasks creates a significant security risk. Instead, it is recommended to use IAM users or roles that adhere to the principle of least privilege.",
+    "source_article": "aws-account-root-user-aws"
+  },
+  {
+    "question": "How can you secure an AWS account root user?",
+    "ground_truth": "To secure the root user, you should immediately enable Multi-Factor Authentication (MFA), use a strong and unique password, and keep its credentials highly secure, ideally requiring multi-person approval for access. For accounts within AWS Organizations, it is also recommended to use Service Control Policies (SCPs) to remove root user credentials from member accounts and enforce centralized control.",
+    "source_article": "aws-account-root-user-aws"
+  },
+  {
+    "question": "What is the primary difference in how samples are generated between a parametric bootstrap and a nonparametric bootstrap?",
+    "ground_truth": "The parametric bootstrap generates resamples from an estimated parametric model, such as N(1\u00b5, 1\u03c3\u00b2), using parameters estimated from the original data. In contrast, the nonparametric bootstrap resamples directly from the observed data's empirical distribution.",
+    "source_article": "parametric-bootstrap"
+  },
+  {
+    "question": "What are the steps involved in performing a parametric bootstrap to estimate the properties of an estimator?",
+    "ground_truth": "The procedure involves four main steps: 1. Estimate the unknown parameters of the chosen parametric model using the observed data to get estimators like Maximum Likelihood Estimators (MLE). 2. Generate new bootstrap data sets by drawing samples from this estimated parametric distribution. 3. For each bootstrap sample, compute the statistic or estimator of interest. 4. Repeat the previous two steps many times (e.g., 1000) to create a collection of bootstrap replications, which can then be used to estimate properties like the standard error or to construct confidence intervals.",
+    "source_article": "parametric-bootstrap"
+  },
+  {
+    "question": "Under what condition is the parametric bootstrap more efficient than the nonparametric bootstrap, and what is its main drawback?",
+    "ground_truth": "The parametric bootstrap is more efficient than the nonparametric bootstrap if the specified parametric model is correct because it incorporates the assumed structure of the data. However, its main drawback is that it is less robust to model misspecification.",
+    "source_article": "parametric-bootstrap"
+  },
+  {
+    "question": "How is a basic solution obtained when using a Tucker Tableau in Linear Optimization?",
+    "ground_truth": "A basic solution is obtained by setting all the Decision Variables, which are the non-basic variables and column headers, to zero. The values for the Slack Variables, which are the basic variables and row headers, can then be read directly from the constant column of the tableau.",
+    "source_article": "basic-solution"
+  },
+  {
+    "question": "What is the conceptual relationship between a basic solution and the feasible region?",
+    "ground_truth": "Each basic solution corresponds to an intersection point of the hyperplanes that define the feasible region, representing a potential \"corner\" or Extreme Point. A basic solution is considered feasible if all its variables are non-negative, meaning it is a point that satisfies all constraints and lies within the feasible region.",
+    "source_article": "basic-solution"
+  },
+  {
+    "question": "What should you do if your initial basic solution is not feasible before applying the Simplex Algorithm?",
+    "ground_truth": "If an initial basic solution is not feasible, meaning not all values are non-negative, preliminary steps are necessary. You must use the Simplex Algorithm for Maximum Tableaus to adjust the negative slack variables in order to find a feasible starting point.",
+    "source_article": "basic-solution"
+  },
+  {
+    "question": "What is the specific formula for the integrating factor used to solve a linear first-order equation of the form y' + P(x)y = Q(x)?",
+    "ground_truth": "For a linear first-order equation with the form `y' + P(x)y = Q(x)`, the integrating factor is `e^(\u222bP(x)dx)`.",
+    "source_article": "integrating-factor"
+  },
+  {
+    "question": "What is the primary function of an integrating factor when applied to a differential equation?",
+    "ground_truth": "An integrating factor is a function that, when multiplied through a non-exact or non-linear differential equation, transforms it into an exact or linear first-order equation that can then be solved using standard methods. Its primary function is to convert a difficult ODE into a solvable one.",
+    "source_article": "integrating-factor"
+  },
+  {
+    "question": "How does an integrating factor simplify the solution process for a linear first-order ordinary differential equation?",
+    "ground_truth": "For a linear first-order ODE, multiplying by the integrating factor transforms the left-hand side of the equation into the derivative of a product, such as `d/dx (y * e^(\u222bP(x)dx))`. This allows the transformed equation to be solved through direct integration.",
+    "source_article": "integrating-factor"
+  },
+  {
+    "question": "What is the primary function of a permissions boundary in AWS IAM, and does it grant permissions?",
+    "ground_truth": "A permissions boundary is an advanced feature in AWS Identity and Access Management (IAM) that sets the maximum permissions an IAM role or user can have. It acts as a \"ceiling\" on permissions. A key principle is that a permissions boundary does not grant permissions on its own; it only restricts them.",
+    "source_article": "permissions-boundaries-iam"
+  },
+  {
+    "question": "Explain how permissions are evaluated when both an identity-based policy and a permissions boundary are attached to an IAM principal.",
+    "ground_truth": "For an action to be allowed for a principal with a permissions boundary, the action must be permitted by both the identity-based permissions policies and the permissions boundary. If an action is allowed by one policy but denied by the other, the action is effectively denied.",
+    "source_article": "permissions-boundaries-iam"
+  },
+  {
+    "question": "How can permissions boundaries be used to safely delegate administrative tasks, such as role creation, to developers?",
+    "ground_truth": "Permissions boundaries are useful in delegated administration scenarios. For example, you can delegate the ability for developers to create new IAM roles for their applications, but use a permissions boundary to ensure that no role they create can ever exceed a predefined maximum set of permissions, such as preventing them from having 'AdministratorAccess'. This helps enforce organizational security guardrails.",
+    "source_article": "permissions-boundaries-iam"
+  },
+  {
+    "question": "What is the primary role of a processor within a Data Ingestion Pipeline?",
+    "ground_truth": "A processor is an optional, intermediate component in a Data Ingestion Pipeline responsible for performing data transformation on incoming data events. Its purpose is to refine, clean, enrich, or restructure raw data to meet the specific requirements of the target data store or for downstream analytics before the data is delivered to the sink.",
+    "source_article": "processor-ingestion"
+  },
+  {
+    "question": "Can a data pipeline have more than one processor, and if so, how are they handled?",
+    "ground_truth": "Yes, a data ingestion pipeline can include multiple processors. When multiple processors are used, they are executed in a defined sequence to perform complex data preparation workflows.",
+    "source_article": "processor-ingestion"
+  },
+  {
+    "question": "Based on the article's recommendations, what is a logical way to order parsing, enrichment, and filtering processors in a pipeline?",
+    "ground_truth": "According to the key takeaways, processors should be sequenced logically. A recommended sequence is to place filtering early to reduce processing load, followed by parsing, and then enrichment. For example, parsing should typically happen before enrichment.",
+    "source_article": "processor-ingestion"
+  },
+  {
+    "question": "What is a key advantage of using resource-based policies in AWS?",
+    "ground_truth": "A key advantage of resource-based policies is their ability to grant Cross-Account Access. By specifying an IAM Principal from another AWS account in the policy's `Principal` element, you can allow entities in that external account to interact with your resource without creating IAM users in your own account.",
+    "source_article": "resource-based-policies-aws"
+  },
+  {
+    "question": "How do resource-based policies differ from identity-based policies?",
+    "ground_truth": "Unlike Identity-Based Policies that specify what an identity can do, resource-based policies specify who (which IAM Principal) can access a specific resource and what actions they can perform on it.",
+    "source_article": "resource-based-policies-aws"
+  },
+  {
+    "question": "What is a trust policy for an IAM role and what type of policy is it?",
+    "ground_truth": "A trust policy for an IAM role is a specific type of resource-based policy that defines which principals are allowed to assume that role. Resource-based policies, including trust policies, are always inline policies, meaning they are embedded directly in the resource.",
+    "source_article": "resource-based-policies-aws"
+  },
+  {
+    "question": "What are the primary architectural benefits of using cross-cluster search in OpenSearch?",
+    "ground_truth": "The primary architectural benefits of using cross-cluster search in OpenSearch are improved fault isolation, which makes the system more resilient because a failure in one cluster does not impact others, and the ability to facilitate independent scaling of different workloads.",
+    "source_article": "cross-cluster-search"
+  },
+  {
+    "question": "How do connections between clusters typically function in a cross-cluster search setup?",
+    "ground_truth": "Connections between clusters for cross-cluster search are typically unidirectional, which means one source cluster can query another destination cluster. However, the article also notes that bidirectional connections can be established.",
+    "source_article": "cross-cluster-search"
+  },
+  {
+    "question": "What important factors must be considered when configuring cross-cluster search?",
+    "ground_truth": "When configuring cross-cluster search, specific considerations include ensuring version compatibility between the clusters and meticulously setting up security and access policies for each domain to prevent unauthorized access.",
+    "source_article": "cross-cluster-search"
+  },
+  {
+    "question": "What are the three common distance metrics used in vector search as described in the article?",
+    "ground_truth": "The three commonly supported distance metrics mentioned are Euclidean Distance (L2 norm), which measures straight-line distance; Cosine Similarity, which measures the cosine of the angle between vectors; and Dot Product, which measures the magnitude of one vector's projection onto another.",
+    "source_article": "distance-metrics-vector-search"
+  },
+  {
+    "question": "How does Cosine Similarity interpret the relationship between two vectors, and why is it effective for certain types of data?",
+    "ground_truth": "Cosine Similarity measures the cosine of the angle between two vectors. Values closer to 1 indicate greater similarity, signifying that the vectors point in similar directions, while values closer to -1 indicate dissimilarity. It is particularly effective for comparing documents of varying lengths.",
+    "source_article": "distance-metrics-vector-search"
+  },
+  {
+    "question": "According to the key takeaways, what is the most important consideration when selecting a distance metric for a specific use case?",
+    "ground_truth": "The most important consideration is to carefully select the distance metric that best aligns with the definition of \"similarity\" that is relevant to your specific data and use case. Understanding how each metric interprets similarity (e.g., absolute closeness vs. directional alignment) is crucial for making an informed choice and avoiding irrelevant results.",
+    "source_article": "distance-metrics-vector-search"
+  },
+  {
+    "question": "What is the 'sifting' property of the Dirac delta function?",
+    "ground_truth": "The 'sifting' property is a defining characteristic of the Dirac delta function. When used in an integral with a continuous test function \u03c6(x), it 'picks out' the value of the function at a specific point 'a'. This is formally expressed as: `\u222b_(-\u221e)^\u221e \u03c6(x) \u03b4(x - a) dx = \u03c6(a)`.",
+    "source_article": "dirac-delta-function"
+  },
+  {
+    "question": "Why is the Dirac delta function considered a 'generalized function' and not a conventional one?",
+    "ground_truth": "The Dirac delta function is considered a 'generalized function' or distribution because it's a mathematical idealization rather than a classical function. It is defined by its behavior under integration and is viewed as the limit of a sequence of functions that become infinitely tall and infinitesimally narrow while maintaining a total integral area of one.",
+    "source_article": "dirac-delta-function"
+  },
+  {
+    "question": "How is the Dirac delta function applied in the fields of physics and engineering?",
+    "ground_truth": "In physics and engineering, the Dirac delta function is used to model highly localized phenomena. Specific applications include describing instantaneous events like a hammer blow, modeling point sources such as a point charge, and defining the initial conditions of systems. It is also used as a forcing function in Ordinary Differential Equations (ODEs) to represent impulsive inputs.",
+    "source_article": "dirac-delta-function"
+  },
+  {
+    "question": "What are the specific mathematical definitions for even and odd functions?",
+    "ground_truth": "A function `f(x)` is defined as even if `f(-x) = f(x)` for all `x` in its domain, which means its graph is symmetric about the y-axis. A function is defined as odd if `f(-x) = -f(x)` for all `x` in its domain, meaning its graph is symmetric with respect to the origin.",
+    "source_article": "even-and-odd-functions"
+  },
+  {
+    "question": "How do the properties of even and odd functions simplify the process of calculating integrals?",
+    "ground_truth": "The symmetry properties of these functions simplify calculations for integrals over symmetric intervals, such as `[-l, l]`. For an odd function, the integral over such an interval is zero. For an even function, the integral over the entire interval is equivalent to twice the integral over half the interval (e.g., from 0 to l), which simplifies the calculation.",
+    "source_article": "even-and-odd-functions"
+  },
+  {
+    "question": "Explain the relationship between even/odd functions and Fourier Series analysis.",
+    "ground_truth": "In Fourier Series analysis, the symmetry of a function over an interval like `[-l, l]` can simplify the calculation of Fourier coefficients by causing many terms to vanish. This can eliminate either the sine or cosine terms from the series. Furthermore, Fourier Sine and Cosine Transforms are specifically created by extending a function defined on `[0, l]` to be purely odd or purely even, respectively, over the interval `[-l, l]`.",
+    "source_article": "even-and-odd-functions"
+  },
+  {
+    "question": "What specific problem do Bland's Anticycling Rules prevent in the Simplex Algorithm?",
+    "ground_truth": "Bland's Anticycling Rules prevent 'Cycling' in the Simplex Algorithm. Cycling occurs when a sequence of degenerate pivots causes the algorithm to repeatedly revisit the same set of basic solutions without improving the objective function, thus preventing it from finding an optimal solution.",
+    "source_article": "bland-s-anticycling-rules"
+  },
+  {
+    "question": "How are ties broken when applying Bland's rules in the Simplex Algorithm?",
+    "ground_truth": "To break ties using Bland's rules, an arbitrary but consistent ordering is assigned to all decision and slack variables. When there is a tie in selecting which variable enters the basis (pivot column), the variable that appears earliest in this ordered list is chosen. Similarly, if a tie occurs when selecting which variable leaves the basis (pivot row), the variable that is earliest in the ordered list is selected.",
+    "source_article": "bland-s-anticycling-rules"
+  },
+  {
+    "question": "What is the general principle behind Bland's rules that makes them effective?",
+    "ground_truth": "The general principle behind Bland's rules is the consistent breaking of ties based on a predefined order. This method of managing ambiguity in an iterative algorithm ensures that the Simplex Algorithm is guaranteed not to cycle, thereby ensuring its finite termination.",
+    "source_article": "bland-s-anticycling-rules"
+  }
+]

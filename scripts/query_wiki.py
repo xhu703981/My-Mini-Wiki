@@ -39,7 +39,7 @@ def search_by_dense(query_vector, k=5):
     return result
 
 def search_by_BM25(query_text,k=5):
-    query_body=  {
+    query_body= {
     "size": k,
     "query": {
       "match": {
